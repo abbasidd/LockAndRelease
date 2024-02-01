@@ -1,27 +1,30 @@
-import { ethers } from "hardhat";
+// deployments/01_deploy_fee_splitting_contract.js
+const { ethers } = require("hardhat");
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+  const [deployer] = await ethers.getSigners();
 
-  const lockedAmount = ethers.parseEther("0.001");
+  console.log("Deploying contracts with the account:", deployer.address);
 
-  const lock = await ethers.deployContract("Lock", [unlockTime], {
-    value: lockedAmount,
-  });
-
-  await lock.waitForDeployment();
+  // Deploy FeeSplittingContract
+  const FeeSplittingContract = await ethers.getContractFactory(
+    "FeeSplittingContract"
+  );
+  const feeSplittingContract = await FeeSplittingContract.deploy(
+    deployer.address,
+    5
+  );
+  // await feeSplittingContract.deployed();
 
   console.log(
-    `Lock with ${ethers.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.target}`
+    "FeeSplittingContract deployed to:",
+    await feeSplittingContract.getAddress()
   );
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
